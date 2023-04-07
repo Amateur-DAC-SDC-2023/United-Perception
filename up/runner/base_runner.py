@@ -294,6 +294,11 @@ class BaseRunner(object):
         if not self.training:
             cfg_hooks = self._remove_hooks(cfg_hooks)
         self._hooks = build_hooks(self, cfg_hooks, add_log_if_not_exists=True)
+        if env.is_master():
+            for hk in self._hooks.hooks:
+                if hasattr(hk, 'summary_writer'):
+                    import mlflow
+                    mlflow.log_text('summary', hk.summary_writer.logdir)
         logger.info('build hooks done')
 
     def build_trainer(self):
@@ -380,7 +385,7 @@ class BaseRunner(object):
                     all_reduce_norm(self.model)
                     if self.ema is not None:
                         all_reduce_norm(self.ema.model)
-                self.evaluate()
+                self.evaluate(iter_idx)
                 self.model.train()
             if self.only_save_latest:
                 self.save_epoch_ckpt(iter_idx)
@@ -490,7 +495,7 @@ class BaseRunner(object):
         return res_file, all_device_results_list
 
     @torch.no_grad()
-    def evaluate(self):
+    def evaluate(self, iter_idx):
         res_file, all_device_results_list = self.inference()
         if env.is_master():
             logger.info("begin evaluate")
@@ -507,6 +512,9 @@ class BaseRunner(object):
         except BaseException:
             logger.warning('metrics type is incompatible for hook')
         self.set_cur_eval_iter()
+        if env.is_master():
+            import mlflow
+            mlflow.log_metrics(metrics, iter_idx)
         return metrics
 
     @torch.no_grad()

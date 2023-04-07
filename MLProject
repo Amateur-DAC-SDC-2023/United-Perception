@@ -1,7 +1,7 @@
 name: up
 conda_env: up.yaml
 entry_points:
-	main: 
-		command: ls
-	build:
-		command: python setup.py build_ext -i
+  main: 
+    command: ls
+  build:
+    command: python setup.py build_ext -i

@@ -158,6 +158,8 @@ def main(args):
 def _main(args):
     DIST_BACKEND.backend = args.backend
     if args.launch == 'pytorch':
+        import mlflow
+        mlflow.log_artifact(args.config)
         launch(main, args.num_gpus_per_machine, args.num_machines, args=args, start_method=args.fork_method)
     else:
         mp.set_start_method(args.fork_method, force=True)
