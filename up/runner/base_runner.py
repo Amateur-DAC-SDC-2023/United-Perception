@@ -512,9 +512,6 @@ class BaseRunner(object):
         except BaseException:
             logger.warning('metrics type is incompatible for hook')
         self.set_cur_eval_iter()
-        if env.is_master():
-            import mlflow
-            mlflow.log_metrics(metrics, iter_idx)
         return metrics
 
     @torch.no_grad()
